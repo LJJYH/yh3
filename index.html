@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <title>袁姮的相册</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
+    <style>
+        	
+  *{margin:0;padding:0}
+body{overflow:hidden;background:#fff)}
+ul{margin:10px auto;width:960px;height:1000px;list-style:none}
+ul li{float:left;margin:10px;width:200px;height:300px;box-shadow:0 0 10px rgba(255,255,255,.5)}
+button{float:left;margin:100px 0 0 100px;width:70px;height:40px;outline:0;border:none;border-radius:10px;background:#add8e6;box-shadow:0 0 10px rgba(0,0,0,.1);color:#fff;cursor:pointer}
+img{width:300px;height:400px}
+  </style>
+</head>
+
+<body>
+      <ul>
+    <li><img src="img/1.jpg"></li>
+    <li><img src="img/2.jpg"></li>
+    <li><img src="img/3.jpg"></li>
+    <li><img src="img/4.jpg"></li>
+    <li><img src="img/5.jpg"></li>
+    <li><img src="img/6.jpg"></li>
+ <li><img src="img/7.jpg"></li>
+ <li><img src="img/8.jpg"></li>
+ <li><img src="img/9.jpg"></li>
+
+</ul>
+</body>
+
+<!-- jquery.particleground.min.js 单行代码做canvas动画特效，没必要再引入js资源 -->
+<script type="text/javascript">
+var move = {
+    moreAttrSameTime: function(obj, info, allTime, fn) {
+
+        var result = [];
+
+        var stepNum = Math.ceil(allTime / (1000 / 60));
+
+        for (var key in info) {
+
+            var attr = key;
+
+            if (attr != "opacity") {
+                var init = parseInt(oGet.getStyle(obj, attr));
+                var end = parseInt(info[key]);
+            } else {
+                var init = parseInt(oGet.getStyle(obj, attr) * 100);
+                var end = parseInt(info[key] * 100);
+            }
+
+            var step = (end - init) / stepNum;
+
+            var json = {
+                "attr": attr,
+                "init": init,
+                "end": end,
+                "step": step,
+            }
+
+            result.push(json);
+        }
+
+        var count = 0;
+
+        clearInterval(obj.time);
+
+        obj.time = setInterval(function() {
+
+            for (var i = 0; i < result.length; i++) {
+
+                result[i].init += result[i].step;
+            }
+
+            count++;
+
+            if (count == stepNum) {
+                //				清除运动计时器
+                clearInterval(obj.time);
+                for (var i = 0; i < result.length; i++) {
+                    result[i].init = result[i].end;
+                }
+            }
+            for (var i = 0; i < result.length; i++) {
+                if (result[i].attr != "opacity") {
+                    obj.style[result[i].attr] = result[i].init + "px";
+                } else {
+                    obj.style[result[i].attr] = result[i].init / 100;
+                }
+            }
+        }, 1000 / 60)
+    }
+}
+
+var aLi = document.getElementsByTagName('li');
+var oFresh = document.getElementById('fresh');
+var arr = [],
+    iZIndex = 1;
+for (var i = 0; i < aLi.length; i++) {
+    arr.push([aLi[i].offsetLeft, aLi[i].offsetTop]);
+}
+for (var i = 0; i < aLi.length; i++) {
+    aLi[i].style.position = 'absolute';
+    aLi[i].style.left = arr[i][0] + 'px';
+    aLi[i].style.top = arr[i][1] + 'px';
+    aLi[i].style.margin = 0;
+}
+for (var i = 0; i < aLi.length; i++) {
+    aLi[i].index = i;
+    drag(aLi[i]);
+}
+oFresh.onclick = function() {
+    var ranArr = [0, 1, 2, 3, 4, 5];
+    ranArr.sort(function(n1, n2) {
+        return Math.random() - 0.5;
+    });
+    for (var i = 0; i < aLi.length; i++) {
+        move.moreAttrSameTime(aLi[i], {
+            'left': arr[ranArr[i]][0],
+            'top': arr[ranArr[i]][1]
+        }, 400);
+        aLi[i].index = ranArr[i];
+    }
+
+};
+
+function drag(obj) {
+    var disX = 0;
+    var disY = 0;
+    obj.onmousedown = function(ev) {
+        var ev = ev || window.event;
+        disX = ev.clientX - obj.offsetLeft;
+        disY = ev.clientY - obj.offsetTop;
+        obj.style.zIndex = iZIndex++;
+        document.onmousemove = function(ev) {
+            var ev = ev || event;
+            obj.style.left = ev.clientX - disX + 'px';
+            obj.style.top = ev.clientY - disY + 'px';
+
+            var nearL = near(obj);
+            for (var i = 0; i < aLi.length; i++) {
+                if (pz(obj, aLi[i]) && obj != aLi[i]) {
+                    aLi[i].style.border = "4px solid lightblue";
+                    nearL.style.border = "4px solid red";
+                } else {
+                    aLi[i].style.border = "none";
+                }
+            }
+        };
+        document.onmouseup = function() {
+            document.onmousemove = null;
+            document.onmouseup = null;
+
+            var nearL = near(obj);
+            var temp;
+            if (nearL) {
+                move.moreAttrSameTime(nearL, {
+                    'left': arr[obj.index][0],
+                    'top': arr[obj.index][1]
+                }, 400);
+                move.moreAttrSameTime(obj, {
+                    'left': arr[nearL.index][0],
+                    'top': arr[nearL.index][1]
+                }, 400);
+                temp = obj.index;
+                obj.index = nearL.index;
+                nearL.index = temp;
+                nearL.style.border = "none";
+            } else {
+                move.moreAttrSameTime(obj, {
+                    'left': arr[obj.index][0],
+                    'top': arr[obj.index][1]
+                }, 400);
+            }
+        };
+        return false;
+    }
+}
+
+function dis(obj1, obj2) {
+    var a = obj1.offsetLeft - obj2.offsetLeft;
+    var b = obj1.offsetTop - obj2.offsetTop;
+    return Math.sqrt(a * a + b * b);
+}
+
+function near(obj) {
+    var value = 9999;
+    var index = -1;
+    for (var i = 0; i < aLi.length; i++) {
+        if (pz(obj, aLi[i]) && obj != aLi[i]) {
+            var c = dis(obj, aLi[i]);
+            if (c < value) {
+                value = c;
+                index = i;
+            }
+        }
+    }
+    if (index != -1) {
+        return aLi[index]
+    } else {
+        return false;
+    }
+}
+
+function getStyle(obj, attr) {
+    if (obj.currentStyle) {
+        return obj.currentStyle[attr];
+    } else {
+        return getComputedStyle(obj, false)[attr];
+    }
+}
+//碰撞检测
+function pz(obj1, obj2) {
+    var T1 = obj1.offsetTop;
+    var B1 = obj1.offsetTop + parseInt(getStyle(obj1, 'height'));
+    var L1 = obj1.offsetLeft;
+    var R1 = obj1.offsetLeft + parseInt(getStyle(obj1, 'width'));
+    var T2 = obj2.offsetTop;
+    var B2 = obj2.offsetTop + parseInt(getStyle(obj2, 'height'));
+    var L2 = obj2.offsetLeft;
+    var R2 = obj2.offsetLeft + parseInt(getStyle(obj2, 'width'));
+    if (T1 > B2 || B1 < T2 || L1 > R2 || R1 < L2) {
+        return false;
+    } else {
+        return true;
+    }
+}
+</script>
+
+</html>
